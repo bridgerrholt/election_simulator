@@ -4,7 +4,7 @@ public class Main {
 	public static void main(String[] args) throws Exception {
 		try {
 			Engine engine = new Engine();
-			engine.setup("databases/test_0/database.db");
+			engine.run("databases/test_0");
 		}
 
 		catch (Exception e) {

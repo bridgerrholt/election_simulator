@@ -62,6 +62,19 @@ class Execution {
 	}
 
 	void run() throws Exception {
+
+		Statement regionsStatement = connection.createStatement();
+
+		ResultSet regions = regionsStatement.executeQuery("SELECT * FROM regions");
+
+		while (regions.next()) {
+			PreparedStatement singleRegion = connection.prepareStatement(
+					"SELECT * FROM public_opinion WHERE region_id = ?");
+			singleRegion.setInt(1, regions.getInt("rowid"));
+
+			calculateCandidateOrder(singleRegion);
+		}
+
 		/*
 
 		// Each region's choices.
@@ -73,6 +86,16 @@ class Execution {
 
 		*/
 	}
+
+	ArrayList<Integer> calculateCandidateOrder(Statement publicOpinions) {
+		/*
+
+		for i in publicOpinions
+
+
+		*/
+	}
+
 
 
 	private Connection connection;

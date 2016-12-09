@@ -1,13 +1,8 @@
 package bridgerrholt.election_sim.execution;
 
-import bridgerrholt.election_sim.Scale;
+import bridgerrholt.election_sim.SettingsReader;
 import bridgerrholt.sqlite_interface.Database;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
 
-import java.io.FileReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 public class Simulation implements Execution {
@@ -35,7 +29,7 @@ public class Simulation implements Execution {
 
 		while (regions.next()) {
 			PreparedStatement singleRegion = connection.prepareStatement(
-				"SELECT * FROM public_opinion WHERE region_id = ?");
+				"SELECT * FROM regional_opinions WHERE region_id = ?");
 			singleRegion.setInt(1, regions.getInt("rowid"));
 
 			calculateCandidateOrder(singleRegion);

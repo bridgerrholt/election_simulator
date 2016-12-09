@@ -1,26 +1,11 @@
 package bridgerrholt.election_sim;
 
-import java.io.FileReader;
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import java.sql.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.charset.Charset;
-import java.util.Map;
-
 import bridgerrholt.election_sim.execution.Execution;
-import bridgerrholt.election_sim.execution.SettingsReader;
 import bridgerrholt.election_sim.execution.Simulation;
 import bridgerrholt.election_sim.execution.SimulationGenerator;
-import com.google.gson.Gson;
-
-import bridgerrholt.sqlite_interface.Database;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.stream.JsonReader;
 
 
 public class Engine {

@@ -1,4 +1,4 @@
-package bridgerrholt.election_sim.execution;
+package bridgerrholt.election_sim;
 
 import bridgerrholt.election_sim.Scale;
 import bridgerrholt.sqlite_interface.Database;

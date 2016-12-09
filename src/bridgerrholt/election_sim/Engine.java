@@ -3,6 +3,7 @@ package bridgerrholt.election_sim;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import java.sql.*;
 import java.nio.file.Files;
@@ -10,9 +11,12 @@ import java.nio.file.Paths;
 import java.nio.charset.Charset;
 import java.util.Map;
 
+import bridgerrholt.election_sim.execution.Execution;
+import bridgerrholt.election_sim.execution.SettingsReader;
+import bridgerrholt.election_sim.execution.Simulation;
+import bridgerrholt.election_sim.execution.SimulationGenerator;
 import com.google.gson.Gson;
 
-import bridgerrholt.helpers.Helpers;
 import bridgerrholt.sqlite_interface.Database;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -20,125 +24,107 @@ import com.google.gson.stream.JsonReader;
 
 
 public class Engine {
-	public Engine() {
+	private Scanner inputScanner;
 
+	public Engine() {
+		inputScanner = new Scanner(System.in);
 	}
 
 	public void run(String simulationPath) throws Exception {
+		ArrayList<String> beginningOptions = new ArrayList<>();
+		beginningOptions.add("QUIT");
+		beginningOptions.add("Simulation");
+		beginningOptions.add("Simulation Generator");
+
 		if (!simulationPath.endsWith("/") && !simulationPath.endsWith("\\")) {
 			simulationPath = simulationPath.concat("/");
 		}
 
-		Execution execution = new Execution(
-			simulationPath.concat(databaseFileName),
+		Execution execution = null;
+
+		SettingsReader settings = new SettingsReader(
 			simulationPath.concat(settingsFileName)
 		);
-		execution.run();
+
+		while (true) {
+			int answer = askQuestion("Run which one?", beginningOptions, 0);
+			boolean toQuit = false;
+
+			switch (answer) {
+				case 0:
+					toQuit = true;
+					break;
+
+				case 1:
+					execution = new Simulation(
+						simulationPath.concat(simulationFileName),
+						settings
+					);
+					break;
+
+				case 2:
+					execution = new SimulationGenerator(
+						simulationPath.concat(simulationFileName),
+						simulationPath.concat(simulationGeneratorFileName),
+						settings
+					);
+					break;
+
+				default:
+					toQuit = true;
+					break;
+			}
+
+			if (toQuit) break;
+
+			System.out.println();
+			execution.run();
+			execution.close();
+			System.out.println();
+		}
 	}
 
-	private static String databaseFileName = "database.db";
-	private static String settingsFileName = "settings.json";
-}
+	private int askQuestion(String question, ArrayList<String> options, int startingNumber) {
+		assert (options.size() > 0);
 
 
-class Execution {
-	Execution(String databasePath, String settingsPath) throws Exception {
-		connection = Database.createConnection(databasePath);
+		int currentNumber = startingNumber;
+		for (String i : options) {
+			System.out.println(currentNumber + ": " + i);
+			++currentNumber;
+		}
 
-		SetupReader.execute(connection, "database_setup.txt");
+		System.out.println(question);
 
-		// Read the provided JSON file containing settings for the simulation.
-		Gson gson = new Gson();
-		JsonReader reader = new JsonReader(new FileReader(settingsPath));
-		JsonElement json = gson.fromJson(reader, JsonElement.class);
-		JsonObject root = json.getAsJsonObject();
+		int maximumNumber = startingNumber + options.size() - 1;
+		int inputNumber;
 
-		// Loop through each object.
-		for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-			if (entry.getKey().equals("scaleDepth")) {
-				scale = new Scale(entry.getValue().getAsInt());
+		while (true) {
+			System.out.print("> ");
+
+			try {
+				inputNumber = inputScanner.nextInt();
+			}
+			catch (Exception e) {
+				// Failure.
+				inputScanner.next();
+				continue;
+			}
+
+			if (inputNumber >= startingNumber && inputNumber <= maximumNumber) {
+				break;
 			}
 		}
+
+		return (inputNumber - startingNumber);
 	}
 
-	void run() throws Exception {
-
-		Statement regionsStatement = connection.createStatement();
-
-		ResultSet regions = regionsStatement.executeQuery("SELECT * FROM regions");
-
-		while (regions.next()) {
-			PreparedStatement singleRegion = connection.prepareStatement(
-					"SELECT * FROM public_opinion WHERE region_id = ?");
-			singleRegion.setInt(1, regions.getInt("rowid"));
-
-			calculateCandidateOrder(singleRegion);
-		}
-
-		/*
-
-		// Each region's choices.
-		for i in sql("SELECT * FROM regions)
-			calculateCandidateOrder(sql("SELECT * FROM public_opinion WHERE region_id = {i.rowid}))
-
-		// Total population choices.
-		calculateCandidateOrder(sql("SELECT * FROM public_opinions))
-
-		*/
-	}
-
-	ArrayList<Integer> calculateCandidateOrder(Statement publicOpinions) {
-		/*
-
-		for i in publicOpinions
-
-
-		*/
-	}
-
-
-
-	private Connection connection;
-	private Scale scale = new Scale(2);
+	private static String simulationFileName          = "simulation.db";
+	private static String simulationGeneratorFileName = "simulation_generator.db";
+	private static String settingsFileName            = "settings.json";
 }
 
 
-class SetupReader {
-	static void execute(Connection connection, String setupPath) throws Exception {
-		List<String> lines = Files.readAllLines(
-			Paths.get(setupPath), Charset.defaultCharset()
-		);
-
-		State state = State.NONE;
-
-		for (String line : lines) {
-			line = line.trim();
-
-			if (line.equals("tables:"))
-				state = State.TABLES;
-
-			else {
-				Statement statement = connection.createStatement();
-				switch (state) {
-					case NONE:
-						while (statement.execute(line)) { }
-						break;
-
-					case TABLES:
-						String queryText = "CREATE TABLE IF NOT EXISTS ".concat(line);
-						while (statement.execute(queryText)) { }
-						break;
-
-					default:
-						throw new Exception("Invalid state within SetupReader");
-				}
-			}
-		}
-	}
 
 
-	private enum State {
-		NONE,
-		TABLES
-	}
-}
+

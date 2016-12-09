@@ -1,7 +1,7 @@
 package bridgerrholt.election_sim;
 
 public class Scale {
-	Scale(int depth) {
+	public Scale(int depth) {
 		this.depth = depth;
 	}
 

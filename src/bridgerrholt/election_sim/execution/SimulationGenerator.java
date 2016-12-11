@@ -19,21 +19,29 @@ public class SimulationGenerator implements Execution {
 
 	public void run() throws Exception {
 		Statement statement = simulationConnection.createStatement();
-		statement.execute("DELETE opinion_lists");
-		statement.execute("DELETE regional_opinions");
+		Database.clearTable(simulationConnection, "opinion_lists");
+		Database.clearTable(simulationConnection, "regional_opinions");
 
 
 		PreparedStatement overview = generatorConnection.prepareStatement(
-				"SELECT * FROM regional_opinion_overview"
+			"SELECT * FROM regional_opinion_overview"
 		);
 
 		while (overview.execute()) {
 			ResultSet resultSet = overview.getResultSet();
+
+			int topicId  = resultSet.getInt("topic_id");
+			int regionId = resultSet.getInt("region_id");
+
 			ArrayList<Integer> peopleCounts = calculateCounts(
-					resultSet.getInt("topic_id"),
-					resultSet.getInt("region_id"),
-					resultSet.getInt("favored_scale_index"),
-					resultSet.getInt("favor_intensity")
+				topicId, regionId,
+				resultSet.getInt("favored_scale_index"),
+				resultSet.getInt("favor_intensity")
+			);
+
+			PreparedStatement regionalOpinionInsert = simulationConnection.prepareStatement(
+				"INSERT INTO regional_opinions (list_id, scale_index, person_count) " +
+				"VALUES (?, ?, ?)"
 			);
 
 			for (Integer i : peopleCounts) {

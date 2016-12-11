@@ -2,5 +2,6 @@ tables:
 topics(name TEXT, description TEXT)
 regions(name TEXT, population INT NOT NULL, votes INT NOT NULL)
 candidates(name TEXT)
-public_opinions(topic_id INT NOT NULL, region_id INT NOT NULL, scale_index INT NOT NULL, person_count INT NOT NULL)
+regional_opinions(topic_id INT NOT NULL, region_id INT NOT NULL, option_list_id INT NOT NULL)
+opinion_lists(list_id INT NOT NULL, scale_index INT NOT NULL, person_count INT NOT NULL)
 candidate_opinions(topic_id INT NOT NULL, candidate_id INT NOT NULL, scale_index_of_opinion INT NOT NULL)

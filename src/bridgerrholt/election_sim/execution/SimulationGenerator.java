@@ -57,6 +57,33 @@ public class SimulationGenerator implements Execution {
 		generatorConnection.close();
 	}
 
+	private ArrayList<Integer> calculateCounts(
+		int topicId,
+		int regionId,
+		int favoredScaleIndex,
+		int favorIntensity) throws Exception{
+
+		PreparedStatement populationStatement = simulationConnection.prepareStatement(
+			"SELECT population FROM regions WHERE region_id = ?"
+		);
+
+		populationStatement.setInt(1, regionId);
+		populationStatement.execute();
+		ResultSet populationSet = populationStatement.getResultSet();
+		int population = populationSet.getInt(1);
+
+		ArrayList<Integer> peopleCounts = new ArrayList<>();
+
+		// x = scale index
+		// t = total scale index size
+		// s = favoredScaleIndex
+		// f = favorIntensity
+		// Function goes from y = 1/t to y = (x - t)
+
+
+		return peopleCounts;
+	}
+
 	private Connection simulationConnection;
 	private Connection generatorConnection;
 }

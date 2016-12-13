@@ -1,7 +1,7 @@
 package bridgerrholt.election_sim.execution;
 
 import bridgerrholt.election_sim.SettingsReader;
-import bridgerrholt.sqlite_interface.Database;
+import bridgerrholt.database_tools.Database;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;

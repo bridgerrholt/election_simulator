@@ -1,7 +1,7 @@
 package bridgerrholt.election_sim.execution;
 
 import bridgerrholt.election_sim.SettingsReader;
-import bridgerrholt.sqlite_interface.Database;
+import bridgerrholt.database_tools.DatabaseInterface;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -13,14 +13,14 @@ public class SimulationGenerator implements Execution {
 	public SimulationGenerator(String simulationFileName,
 	                           String generatorFileName,
 	                           SettingsReader settings) throws Exception {
-		simulationConnection = Database.createConnection(simulationFileName);
-		generatorConnection  = Database.createConnection(generatorFileName);
+		simulationConnection = DatabaseInterface.createConnection(simulationFileName);
+		generatorConnection  = DatabaseInterface.createConnection(generatorFileName);
 	}
 
 	public void run() throws Exception {
 		Statement statement = simulationConnection.createStatement();
-		Database.clearTable(simulationConnection, "opinion_lists");
-		Database.clearTable(simulationConnection, "regional_opinions");
+		DatabaseInterface.clearTable(simulationConnection, "opinion_lists");
+		DatabaseInterface.clearTable(simulationConnection, "regional_opinions");
 
 
 		PreparedStatement overview = generatorConnection.prepareStatement(

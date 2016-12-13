@@ -1,7 +1,5 @@
 package bridgerrholt.election_sim;
 
-import bridgerrholt.election_sim.Scale;
-import bridgerrholt.sqlite_interface.Database;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

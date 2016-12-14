@@ -80,6 +80,25 @@ public class SimulationGenerator implements Execution {
 		// f = favorIntensity
 		// Function goes from y = 1/t to y = (x - t)
 
+		/*
+		scaleSize
+		favoredScaleIndex
+		favorIntensity
+		scaleFrontIndex
+
+		arr (scaleSize)
+		i = favoredScaleIndex - scaleFrontIndex
+
+		maximum = 100
+		minimum = maximum/scaleSize
+		difference = maximum - minimum
+
+		additional = (scaleSize * difference) / maximum
+		arr[i] = minimum + additional
+
+
+		*/
+
 
 		return peopleCounts;
 	}

@@ -1,7 +1,7 @@
 package bridgerrholt.election_sim.execution;
 
 import bridgerrholt.election_sim.SettingsReader;
-import bridgerrholt.database_tools.Database;
+import bridgerrholt.database_tools.DatabaseInterface;
 
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -16,7 +16,7 @@ import java.util.List;
 
 public class Simulation implements Execution {
 	public Simulation(String databasePath, SettingsReader settings) throws Exception {
-		connection = Database.createConnection(databasePath);
+		connection = DatabaseInterface.createConnection(databasePath);
 
 		SetupReader.execute(connection, "database_setup.txt");
 	}

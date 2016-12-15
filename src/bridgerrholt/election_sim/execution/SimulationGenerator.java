@@ -61,7 +61,7 @@ public class SimulationGenerator implements Execution {
 		int topicId,
 		int regionId,
 		int favoredScaleIndex,
-		int favorIntensity) throws Exception{
+		int favorIntensity) throws Exception {
 
 		PreparedStatement populationStatement = simulationConnection.prepareStatement(
 			"SELECT population FROM regions WHERE region_id = ?"
@@ -72,7 +72,38 @@ public class SimulationGenerator implements Execution {
 		ResultSet populationSet = populationStatement.getResultSet();
 		int population = populationSet.getInt(1);
 
-		ArrayList<Integer> peopleCounts = new ArrayList<>();
+		int scaleSize = settings.getScale().getSize();
+
+		ArrayList<Integer> peopleCounts = new ArrayList<>(scaleSize);
+
+		// Non-mathematical version
+		int    maxPoints     =  100;
+		double pointRate     = -(1.0/(scaleSize-1)) * favorIntensity;
+		double currentPoints = maxPoints;
+		int[]  points = new int[scaleSize];
+
+		for (int i = 0; i < scaleSize; ++i) {
+			points[i] = Math.toIntExact(Math.round(currentPoints));
+			currentPoints += pointRate;
+		}
+
+		int left  = favoredScaleIndex - 1;
+		int right = favoredScaleIndex + 1;
+		peopleCounts.set(0, points[favoredScaleIndex]);
+
+		for (int i = 1; i < scaleSize; ++i) {
+			if (left >= 0 && left < scaleSize) {
+				peopleCounts.set(left, points[i]);
+			}
+			if (right >= 0 && right < scaleSize) {
+				peopleCounts.set(right, points[i]);
+			}
+
+			left--;
+			right++;
+		}
+
+
 
 		// x = scale index
 		// t = total scale index size
@@ -103,6 +134,7 @@ public class SimulationGenerator implements Execution {
 		return peopleCounts;
 	}
 
-	private Connection simulationConnection;
-	private Connection generatorConnection;
+	private Connection     simulationConnection;
+	private Connection     generatorConnection;
+	private SettingsReader settings;
 }

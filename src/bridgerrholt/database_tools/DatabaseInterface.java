@@ -35,7 +35,7 @@ public class DatabaseInterface {
 			throws SQLException {
 		Statement statement = connection.createStatement();
 		statement.execute("delete from " + tableName);
-		statement.execute("delete from sqlite_sequence where name='" + tableName + "'");
+		//statement.execute("delete from sqlite_sequence where name='" + tableName + "'");
 	}
 
 	public static String getDefaultDriverClass() { return defaultDriverClass; }

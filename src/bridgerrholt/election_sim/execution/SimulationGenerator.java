@@ -42,6 +42,12 @@ public class SimulationGenerator implements Execution {
 				resultSet.getInt("favor_intensity")
 			);
 
+			for (Integer i : peopleCounts) {
+				System.out.print(i + " ");
+			}
+
+			System.out.println();
+
 			/*PreparedStatement regionalOpinionInsert = simulationConnection.prepareStatement(
 				"INSERT INTO regional_opinions (list_id, scale_index, person_count) " +
 				"VALUES (?, ?, ?)"

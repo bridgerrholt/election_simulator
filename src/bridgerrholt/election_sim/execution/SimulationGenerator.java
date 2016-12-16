@@ -2,6 +2,7 @@ package bridgerrholt.election_sim.execution;
 
 import bridgerrholt.election_sim.SettingsReader;
 import bridgerrholt.database_tools.DatabaseInterface;
+import bridgerrholt.supports.Probability;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,6 +16,7 @@ public class SimulationGenerator implements Execution {
 	                           SettingsReader settings) throws Exception {
 		simulationConnection = DatabaseInterface.createConnection(simulationFileName);
 		generatorConnection  = DatabaseInterface.createConnection(generatorFileName);
+		this.settings = settings;
 	}
 
 	public void run() throws Exception {
@@ -27,9 +29,10 @@ public class SimulationGenerator implements Execution {
 			"SELECT * FROM regional_opinion_overview"
 		);
 
-		while (overview.execute()) {
-			ResultSet resultSet = overview.getResultSet();
+		ResultSet resultSet = overview.executeQuery();
 
+
+		while (resultSet.next()) {
 			int topicId  = resultSet.getInt("topic_id");
 			int regionId = resultSet.getInt("region_id");
 
@@ -39,14 +42,14 @@ public class SimulationGenerator implements Execution {
 				resultSet.getInt("favor_intensity")
 			);
 
-			PreparedStatement regionalOpinionInsert = simulationConnection.prepareStatement(
+			/*PreparedStatement regionalOpinionInsert = simulationConnection.prepareStatement(
 				"INSERT INTO regional_opinions (list_id, scale_index, person_count) " +
 				"VALUES (?, ?, ?)"
 			);
 
 			for (Integer i : peopleCounts) {
 
-			}
+			}*/
 		}
 
 		System.out.println("Generated successfully.");
@@ -64,71 +67,62 @@ public class SimulationGenerator implements Execution {
 		int favorIntensity) throws Exception {
 
 		PreparedStatement populationStatement = simulationConnection.prepareStatement(
-			"SELECT population FROM regions WHERE region_id = ?"
+			"SELECT (population) FROM regions WHERE rowid = ?"
 		);
 
 		populationStatement.setInt(1, regionId);
-		populationStatement.execute();
-		ResultSet populationSet = populationStatement.getResultSet();
+		ResultSet populationSet = populationStatement.executeQuery();
+		boolean populationSuccess = populationSet.next();
+		assert (populationSuccess);
 		int population = populationSet.getInt(1);
 
 		int scaleSize = settings.getScale().getSize();
 
+
+		// Piece-wise figuring for the deviation based on favorIntensity.
+		double deviation = 0;
+		final double deviationMax = 1000;
+		if (favorIntensity < 0 || favorIntensity > 100) {
+			throw new Exception("favor_intensity invalid");
+		}
+		if (favorIntensity == 0) {
+			deviation = deviationMax;
+		}
+		// Very undocumented and bad code.
+		// Basically taking a value from a line (1, 3) to (50, 1).
+		else if (favorIntensity <= 50) {
+			deviation = 3 - ((2 * (favorIntensity - 1)) / 49);
+		}
+		// (50, 1) to (100, 0.1).
+		else {
+			deviation = 1 - ((0.9 * (favorIntensity - 50)) / 50);
+		}
+
+
+		ArrayList<Double> rawDistribution = new ArrayList<>(scaleSize);
+		double rawTotal = 0;
+		for (int i = 0; i < scaleSize; i++) {
+			double exact = Probability.normalDistribution(i, favoredScaleIndex, deviation);
+			rawDistribution.add(exact);
+			rawTotal += exact;
+		}
+
 		ArrayList<Integer> peopleCounts = new ArrayList<>(scaleSize);
-
-		// Non-mathematical version
-		int    maxPoints     =  100;
-		double pointRate     = -(1.0/(scaleSize-1)) * favorIntensity;
-		double currentPoints = maxPoints;
-		int[]  points = new int[scaleSize];
-
-		for (int i = 0; i < scaleSize; ++i) {
-			points[i] = Math.toIntExact(Math.round(currentPoints));
-			currentPoints += pointRate;
+		int personTotal = 0;
+		for (Double rawValue : rawDistribution) {
+			double ratio = rawValue / rawTotal;
+			int rounded = (int)Math.floor(population * ratio);
+			peopleCounts.add(rounded);
+			personTotal += rounded;
 		}
 
-		int left  = favoredScaleIndex - 1;
-		int right = favoredScaleIndex + 1;
-		peopleCounts.set(0, points[favoredScaleIndex]);
-
-		for (int i = 1; i < scaleSize; ++i) {
-			if (left >= 0 && left < scaleSize) {
-				peopleCounts.set(left, points[i]);
-			}
-			if (right >= 0 && right < scaleSize) {
-				peopleCounts.set(right, points[i]);
-			}
-
-			left--;
-			right++;
+		int personDifference = population - personTotal;
+		if (personDifference > 0) {
+			peopleCounts.set(favoredScaleIndex,
+				peopleCounts.get(favoredScaleIndex) + personDifference
+			);
 		}
 
-
-
-		// x = scale index
-		// t = total scale index size
-		// s = favoredScaleIndex
-		// f = favorIntensity
-		// Function goes from y = 1/t to y = (x - t)
-
-		/*
-		scaleSize
-		favoredScaleIndex
-		favorIntensity
-		scaleFrontIndex
-
-		arr (scaleSize)
-		i = favoredScaleIndex - scaleFrontIndex
-
-		maximum = 100
-		minimum = maximum/scaleSize
-		difference = maximum - minimum
-
-		additional = (scaleSize * difference) / maximum
-		arr[i] = minimum + additional
-
-
-		*/
 
 
 		return peopleCounts;
